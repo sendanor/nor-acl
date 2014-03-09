@@ -22,22 +22,13 @@ function is_false(x) {
 acl.request = function(opts) {
 	opts = opts || {};
 	var routes_file = opts.routes;
-
 	debug.assert(routes_file).is('string');
-
-	var routes_json;
+	var routes_json = require('nor-routes-json').load(routes_file);
 
 	return function(req, res) {
-		if(routes_json === undefined) {
-			routes_json = require('nor-routes-json').load(routes_file);
-		}
+
 		return Q.fcall(function() {
 			assert_route.handlers(req, res);
-
-			//debug.log('req.user = ', req.user);
-			//debug.log('req.route = ', req.route);
-			//debug.log('req.flags = ', req.flags);
-
 			debug.assert(req.route).is('object');
 			debug.assert(req.flags).is('object');
 
@@ -88,6 +79,18 @@ acl.request = function(opts) {
 				throw new HTTPError(404);
 			}
 		});
+	};
+};
+
+/** Express plugin */
+acl.plugin = function(opts) {
+	var check = acl.request(opts);
+	return function(req, res, next) {
+		check(req, res).then(function() {
+			next();
+		}).fail(function(err) {
+			next(err);
+		}).done();
 	};
 };
 
