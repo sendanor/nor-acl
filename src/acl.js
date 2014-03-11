@@ -26,11 +26,18 @@ acl.request = function(opts) {
 	var routes_json = require('nor-routes-json').load(routes_file);
 
 	return function(req, res) {
-
 		return Q.fcall(function() {
-			assert_route.handlers(req, res);
+
+			debug.assert(req).is('object');
+			debug.assert(res).is('object');
+
+			//debug.log('req.route = ', req.route);
+			//debug.log('req.flags = ', req.flags);
+
 			debug.assert(req.route).is('object');
 			debug.assert(req.flags).is('object');
+
+			assert_route.handlers(req, res);
 
 			// Current access flags
 			var flags = req.flags;
@@ -53,7 +60,15 @@ acl.request = function(opts) {
 				// FIXME: should we merge more than one item?	
 			}	
 			routes = routes.shift();
-			debug.assert(routes).is('object');
+
+			if(!is.obj(routes)) {
+				debug.warn('No config found for route ' + method + ' ' + path + ', using default which accepts all traffic.');
+				routes = {
+					'flags': {
+						'public': true
+					}
+				};
+			}
 		
 			// Check information
 
@@ -84,11 +99,20 @@ acl.request = function(opts) {
 
 /** Express plugin */
 acl.plugin = function(opts) {
+	//debug.log('here');
 	var check = acl.request(opts);
+	debug.assert(check).is('function');
 	return function(req, res, next) {
+		//debug.log('here');
+		debug.assert(req).is('object');
+		debug.assert(req.route).is('object');
+		debug.assert(res).is('object');
+		debug.assert(next).is('function');
 		check(req, res).then(function() {
+			//debug.log('here');
 			next();
 		}).fail(function(err) {
+			debug.error(err);
 			next(err);
 		}).done();
 	};
