@@ -1,4 +1,4 @@
-/** acl */
+/** Express Access Control List Module */
 
 var util = require('util');
 var is = require('nor-is');
@@ -9,6 +9,10 @@ var acl = module.exports = {};
 var nor_express = require('nor-express');
 var HTTPError = nor_express.HTTPError;
 var assert_route = nor_express.assert;
+
+function copy(x) {
+	return JSON.parse(JSON.stringify(x));
+}
 
 function is_true(x) {
 	return (x === true) ? true : false;
@@ -24,6 +28,16 @@ acl.request = function(opts) {
 	var routes_file = opts.routes;
 	debug.assert(routes_file).is('string');
 	var routes_json = require('nor-routes-json').load(routes_file);
+
+	if(opts.defaultACL === undefined) {
+		opts.defaultACL = {
+			'flags': {
+				'admin': true
+			}
+		};
+	}
+
+	debug.assert(opts.defaultACL).is('object');
 
 	return function(req, res) {
 		return Q.fcall(function() {
@@ -63,11 +77,7 @@ acl.request = function(opts) {
 
 			if(!is.obj(routes)) {
 				debug.warn('No config found for route ' + method + ' ' + path + ', using default which accepts all traffic.');
-				routes = {
-					'flags': {
-						'public': true
-					}
-				};
+				routes = copy(opts.defaultACL);
 			}
 		
 			// Check information
