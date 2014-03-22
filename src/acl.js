@@ -10,23 +10,29 @@ var nor_express = require('nor-express');
 var HTTPError = nor_express.HTTPError;
 var assert_route = nor_express.assert;
 
+/** Copy an object */
 function copy(x) {
 	return JSON.parse(JSON.stringify(x));
 }
 
+/** Returns `true` if `x` is `true`, otherwise `false`. */
 function is_true(x) {
 	return (x === true) ? true : false;
 }
 
+/** Returns `true` if `x` is `false`, otherwise `false`. */
 function is_false(x) {
 	return (x === false) ? true : false;
 }
 
 /** Handle request access control by access control list */
-acl.request = function(opts) {
+acl.request = function acl_request(opts) {
 	opts = opts || {};
+	debug.assert(opts).is('object');
+
 	var routes_file = opts.routes;
 	debug.assert(routes_file).is('string');
+
 	var routes_json = require('nor-routes-json').load(routes_file);
 
 	if(opts.defaultACL === undefined) {
@@ -39,7 +45,15 @@ acl.request = function(opts) {
 
 	debug.assert(opts.defaultACL).is('object');
 
-	return function(req, res) {
+	function noop_keys() {
+		return true;
+	}
+
+	var keys = opts.keys || noop_keys;
+
+	debug.assert(keys).is('function');
+
+	return function acl_request_handler(req, res) {
 		return Q.fcall(function() {
 
 			debug.assert(req).is('object');
@@ -55,6 +69,8 @@ acl.request = function(opts) {
 
 			// Current access flags
 			var flags = req.flags;
+			debug.assert(flags).is('object');
+			//debug.log('flags = ', flags);
 
 			// Current request information
 			var route = req.route || {};
@@ -79,17 +95,19 @@ acl.request = function(opts) {
 				debug.warn('No config found for route ' + method + ' ' + path + ', using default which accepts all traffic.');
 				routes = copy(opts.defaultACL);
 			}
-		
-			// Check information
+			
+			/* Check information */
+			debug.log("routes = ", routes);
 
-			//debug.log('flags = ', flags);
-			debug.assert(flags).is('object');
+			var checks = [];
 
-			var accepts;
-
-			var flag_keys = Object.keys(routes.flags);
-			if(flag_keys.length >= 1) {
-				accepts = flag_keys.map(function(flag) {
+			/* Check flags */
+			checks.push(Q.fcall(function check_flags() {
+				var flag_keys = Object.keys(routes.flags);
+				if(flag_keys.length <= 0) {
+					return false;
+				}
+				return flag_keys.map(function(flag) {
 					if( is_true(routes.flags[flag]) && is_true(flags[flag]) ) {
 						return true;
 					}
@@ -97,22 +115,46 @@ acl.request = function(opts) {
 						return true;
 					}
 				}).every(is_true);
+			}));
+
+			/* Check keys */
+			if(routes.keys.length > 0) {
+				//var params = req.params || {};
+				//debug.assert(params).is('object');
+
+				routes.keys.forEach(function(key) {
+					debug.log('key = ', key);
+					//return Q( opts.keys(key, req, res) );
+					checks.push( opts.keys(key, req, res) );
+				});
 			}
 
-			if(!is_true(accepts)) {
-				debug.warn('Access denied to ' + method + ' ' + path);
-				throw new HTTPError(404);
-			}
+			return Q.allSettled(checks).then(function(results) {
+				debug.assert(results).is('array');
+
+				debug.log('results =', results);
+
+				var accepts = results.map(function(result) { if(result.state === 'fulfilled') { return result.value; } }).every(is_true);
+				debug.assert(accepts).is('boolean');
+
+				/* Check accepts */
+				debug.log("accepts = ", accepts);
+
+				if(! is_true(accepts) ) {
+					debug.warn('Access denied to ' + method + ' ' + path);
+					throw new HTTPError(404);
+				}
+			});
 		});
 	};
 };
 
 /** Express plugin */
-acl.plugin = function(opts) {
+acl.plugin = function acl_plugin(opts) {
 	//debug.log('here');
 	var check = acl.request(opts);
 	debug.assert(check).is('function');
-	return function(req, res, next) {
+	return function acl_plugin_handler(req, res, next) {
 		//debug.log('here');
 		debug.assert(req).is('object');
 		debug.assert(req.route).is('object');
