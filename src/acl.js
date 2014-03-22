@@ -118,7 +118,7 @@ acl.request = function acl_request(opts) {
 			}));
 
 			/* Check keys */
-			if(routes.keys.length > 0) {
+			if(is.array(routes.keys) && routes.keys.length > 0) {
 				//var params = req.params || {};
 				//debug.assert(params).is('object');
 
