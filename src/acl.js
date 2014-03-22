@@ -92,7 +92,7 @@ acl.request = function acl_request(opts) {
 			routes = routes.shift();
 
 			if(!is.obj(routes)) {
-				debug.warn('No config found for route ' + method + ' ' + path + ', using default which accepts all traffic.');
+				debug.warn('No config found for route ' + method.toUpperCase() + '(' + path + '), using default: ', opts.defaultACL);
 				routes = copy(opts.defaultACL);
 			}
 			
