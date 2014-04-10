@@ -86,18 +86,18 @@ acl.request = function acl_request(opts) {
 			//debug.log('routes = ', routes);
 			//debug.assert(routes).is('array').length(1);
 			if(routes.length >= 2) {
-				debug.warn('More than two routes detected, we will use only first!');
+				debug.warn('[', method.toUpperCase(), ' ', path, '] More than two routes detected, we will use only first!');
 				// FIXME: should we merge more than one item?	
 			}	
 			routes = routes.shift();
 
 			if(!is.obj(routes)) {
-				debug.warn('No config found for route ' + method.toUpperCase() + '(' + path + '), using default: ', opts.defaultACL);
+				debug.warn('[', method.toUpperCase(), ' ', path, '] No config found for route, using the default: ', opts.defaultACL);
 				routes = copy(opts.defaultACL);
 			}
 			
 			/* Check information */
-			debug.log("routes = ", routes);
+			//debug.log("routes = ", routes);
 
 			var checks = [];
 
@@ -123,7 +123,7 @@ acl.request = function acl_request(opts) {
 				//debug.assert(params).is('object');
 
 				routes.keys.forEach(function(key) {
-					debug.log('key = ', key);
+					//debug.log('key = ', key);
 					//return Q( opts.keys(key, req, res) );
 					checks.push( opts.keys(key, req, res) );
 				});
@@ -132,13 +132,13 @@ acl.request = function acl_request(opts) {
 			return Q.allSettled(checks).then(function(results) {
 				debug.assert(results).is('array');
 
-				debug.log('results =', results);
+				//debug.log('results =', results);
 
 				var accepts = results.map(function(result) { if(result.state === 'fulfilled') { return result.value; } }).every(is_true);
 				debug.assert(accepts).is('boolean');
 
 				/* Check accepts */
-				debug.log("accepts = ", accepts);
+				//debug.log("accepts = ", accepts);
 
 				if(! is_true(accepts) ) {
 					debug.warn('Access denied to ' + method + ' ' + path);

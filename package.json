@@ -1,6 +1,6 @@
 {
   "name": "nor-acl",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "ACL routes",
   "main": "src/acl.js",
   "scripts": {
