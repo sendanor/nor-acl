@@ -49,9 +49,9 @@ acl.request = function acl_request(opts) {
 		return true;
 	}
 
-	var keys = opts.keys || noop_keys;
+	opts.keys = opts.keys || noop_keys;
 
-	debug.assert(keys).is('function');
+	debug.assert(opts.keys).is('function');
 
 	return function acl_request_handler(req, res) {
 		return Q.fcall(function() {
