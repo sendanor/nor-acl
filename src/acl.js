@@ -17,16 +17,63 @@ function copy(x) {
 
 /** Returns `true` if `x` is `true`, otherwise `false`. */
 function is_true(x) {
-	return (x === true) ? true : false;
+	return !!(x === true);
 }
 
 /** Returns `true` if `x` is `false`, otherwise `false`. */
 function is_false(x) {
-	return (x === false) ? true : false;
+	return !!(x === false);
+}
+
+/** */
+function check_flags(routes, user_flags) {
+
+	/** Returns `true` if `user_flags` has flag `f` and it is `true`. Otherwise returns `false`. */
+	function user_has_flag(f) {
+		return is_true(user_flags[f]);
+    }
+
+	var route_flags = Object.keys(routes.flags);
+
+	// If the route has no flags set, we cannot accept anything.
+	if(route_flags.length <= 0) {
+		return false;
+	}
+
+	// Get list of flags to accept
+	var accept_flags = route_flags.filter(function(flag) {
+		return is_true(routes.flags[flag]);
+	});
+
+	// Get list of flags to reject
+	var reject_flags = route_flags.filter(function(flag) {
+		return is_false(routes.flags[flag]);
+	});
+
+	// Reject if user has a flag in the reject flag list
+	if( (reject_flags.length !== 0) && reject_flags.some(user_has_flag) ) {
+		return false;
+	}
+
+	// Accept if user has a flag in the accept flag list
+	return !!( (accept_flags.length !== 0) && accept_flags.some(user_has_flag) );
+
+	/*
+	return route_flags.map(function(flag) {
+		if( is_true(routes.flags[flag]) && is_true(user_flags[flag]) ) {
+			return true;
+		}
+		if( is_false(routes.flags[flag]) && (!is_true(user_flags[flag])) ) {
+			return true;
+		}
+	}).every(is_true);
+	*/
 }
 
 /** Handle request access control by access control list */
 acl.request = function acl_request(opts) {
+
+
 	opts = opts || {};
 	debug.assert(opts).is('object');
 
@@ -83,6 +130,7 @@ acl.request = function acl_request(opts) {
 			debug.assert(method).is('string');
 
 			var routes = routes_json.find({path:path, method:method});
+
 			//debug.log('routes = ', routes);
 			//debug.assert(routes).is('array').length(1);
 			if(routes.length >= 2) {
@@ -102,20 +150,7 @@ acl.request = function acl_request(opts) {
 			var checks = [];
 
 			/* Check flags */
-			checks.push(Q.fcall(function check_flags() {
-				var flag_keys = Object.keys(routes.flags);
-				if(flag_keys.length <= 0) {
-					return false;
-				}
-				return flag_keys.map(function(flag) {
-					if( is_true(routes.flags[flag]) && is_true(flags[flag]) ) {
-						return true;
-					}
-					if( is_false(routes.flags[flag]) && (!is_true(flags[flag])) ) {
-						return true;
-					}
-				}).every(is_true);
-			}));
+			checks.push(Q.fcall(check_flags.bind(undefined, routes, flags)));
 
 			/* Check keys */
 			if(is.array(routes.keys) && routes.keys.length > 0) {
