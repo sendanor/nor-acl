@@ -129,7 +129,7 @@ acl.request = function acl_request(opts) {
 			debug.assert(path).is('string');
 			debug.assert(method).is('string');
 
-			var routes = routes_json.find({path:path, method:method});
+			var routes = routes_json.findTarget(path, method);
 
 			//debug.log('routes = ', routes);
 			//debug.assert(routes).is('array').length(1);
