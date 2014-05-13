@@ -199,7 +199,7 @@ acl.plugin = function acl_plugin(opts) {
 			//debug.log('here');
 			next();
 		}).fail(function(err) {
-			debug.error(err);
+			//debug.error('Passing on error: ' + err);
 			next(err);
 		}).done();
 	};
