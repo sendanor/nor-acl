@@ -31,7 +31,7 @@ function check_flags(routes, user_flags) {
 	/** Returns `true` if `user_flags` has flag `f` and it is `true`. Otherwise returns `false`. */
 	function user_has_flag(f) {
 		return is_true(user_flags[f]);
-    }
+	}
 
 	var route_flags = Object.keys(routes.flags);
 
@@ -135,15 +135,15 @@ acl.request = function acl_request(opts) {
 			//debug.assert(routes).is('array').length(1);
 			if(routes.length >= 2) {
 				debug.warn('[', method.toUpperCase(), ' ', path, '] More than two routes detected, we will use only first!');
-				// FIXME: should we merge more than one item?	
-			}	
+				// FIXME: should we merge more than one item?
+			}
 			routes = routes.shift();
 
 			if(!is.obj(routes)) {
 				debug.warn('[', method.toUpperCase(), ' ', path, '] No config found for route, using the default: ', opts.defaultACL);
 				routes = copy(opts.defaultACL);
 			}
-			
+
 			/* Check information */
 			//debug.log("routes = ", routes);
 
