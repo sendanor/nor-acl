@@ -3,6 +3,8 @@
 var util = require('util');
 var is = require('nor-is');
 var debug = require('nor-debug');
+var ARRAY = require('nor-array');
+var FUNCTION = require('nor-function');
 var Q = require('q');
 var acl = module.exports = {};
 
@@ -57,17 +59,6 @@ function check_flags(routes, user_flags) {
 
 	// Accept if user has a flag in the accept flag list
 	return !!( (accept_flags.length !== 0) && accept_flags.some(user_has_flag) );
-
-	/*
-	return route_flags.map(function(flag) {
-		if( is_true(routes.flags[flag]) && is_true(user_flags[flag]) ) {
-			return true;
-		}
-		if( is_false(routes.flags[flag]) && (!is_true(user_flags[flag])) ) {
-			return true;
-		}
-	}).every(is_true);
-	*/
 }
 
 /** Handle request access control by access control list */
@@ -150,18 +141,15 @@ acl.request = function acl_request(opts) {
 			var checks = [];
 
 			/* Check flags */
-			checks.push(Q.fcall(check_flags.bind(undefined, routes, flags)));
+			checks.push(Q.fcall( FUNCTION(check_flags).curry(routes, flags) ));
 
 			/* Check keys */
-			if(is.array(routes.keys) && routes.keys.length > 0) {
-				//var params = req.params || {};
-				//debug.assert(params).is('object');
+			function push_to_checks(key) {
+				checks.push( opts.keys(key, req, res) );
+			}
 
-				routes.keys.forEach(function(key) {
-					//debug.log('key = ', key);
-					//return Q( opts.keys(key, req, res) );
-					checks.push( opts.keys(key, req, res) );
-				});
+			if(is.array(routes.keys) && routes.keys.length > 0) {
+				ARRAY(routes.keys).forEach(push_to_checks);
 			}
 
 			return Q.allSettled(checks).then(function(results) {
@@ -169,7 +157,13 @@ acl.request = function acl_request(opts) {
 
 				//debug.log('results =', results);
 
-				var accepts = results.map(function(result) { if(result.state === 'fulfilled') { return result.value; } }).every(is_true);
+				function if_state_is_fulfilled(result) {
+					if(result.state === 'fulfilled') {
+						return result.value;
+					}
+				}
+
+				var accepts = ARRAY(results).map(if_state_is_fulfilled).every(is_true).valueOf();
 				debug.assert(accepts).is('boolean');
 
 				/* Check accepts */
