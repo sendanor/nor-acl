@@ -43,22 +43,22 @@ function check_flags(routes, user_flags) {
 	}
 
 	// Get list of flags to accept
-	var accept_flags = route_flags.filter(function(flag) {
+	var accept_flags = ARRAY(route_flags).filter(function(flag) {
 		return is_true(routes.flags[flag]);
-	});
+	}).valueOf();
 
 	// Get list of flags to reject
-	var reject_flags = route_flags.filter(function(flag) {
+	var reject_flags = ARRAY(route_flags).filter(function(flag) {
 		return is_false(routes.flags[flag]);
-	});
+	}).valueOf();
 
 	// Reject if user has a flag in the reject flag list
-	if( (reject_flags.length !== 0) && reject_flags.some(user_has_flag) ) {
+	if( (reject_flags.length !== 0) && ARRAY(reject_flags).some(user_has_flag) ) {
 		return false;
 	}
 
 	// Accept if user has a flag in the accept flag list
-	return !!( (accept_flags.length !== 0) && accept_flags.some(user_has_flag) );
+	return !!( (accept_flags.length !== 0) && ARRAY(accept_flags).some(user_has_flag) );
 }
 
 /** Handle request access control by access control list */
