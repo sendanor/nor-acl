@@ -1,6 +1,6 @@
 {
   "name": "nor-acl",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "description": "ACL routes",
   "main": "src/acl.js",
   "scripts": {
@@ -23,12 +23,12 @@
   },
   "homepage": "https://github.com/sendanor/nor-acl",
   "dependencies": {
-    "nor-express"     : ">= 0.1.54 < 0.2.0",
+    "nor-express"     : ">= 0.1.55 < 0.2.0",
     "nor-is"          : ">= 0.1.16 < 0.2.0",
-    "nor-debug"       : ">= 0.1.49 < 0.2.0",
+    "nor-debug"       : ">= 0.1.52 < 0.2.0",
     "nor-array"       : ">= 0.1.7 < 0.2.0",
     "nor-function"    : ">= 0.1.6 < 0.2.0",
-    "nor-routes-json" : ">= 0.1.17  < 0.2.0",
+    "nor-routes-json" : ">= 0.1.18  < 0.2.0",
     "q"               : ">= 1.0.1  < 1.1.0"
   },
   "devDependencies": {
